@@ -682,19 +682,38 @@ class App:
         self._label(p2, "Road counts & green time", size=12, bold=True).pack(anchor="w", padx=12, pady=(10, 6))
         table = tk.Frame(p2, bg=PANEL)
         table.pack(fill="x", padx=12)
-        for c, h in enumerate(("Road", "Cars / 15 min*", "Fixed green", "Smart score")):
+        for c, h in enumerate((
+            "Road", "Cars / 15 min*", "Fixed total (s)",
+            "Smart total (s)", "Smart score"
+        )):
             self._label(table, h, fg=MUTED, size=9, anchor="w" if c == 0 else "e").grid(row=0, column=c, sticky="ew", padx=3, pady=3)
         table.columnconfigure(0, weight=1)
-        self.road_counts, self.smart_scores = [], []
+        self.road_counts = []
+        self.smart_scores = []
+        self.fixed_green_labels = []
+        self.smart_green_labels = []
+
         for i, r in enumerate(ROADS, start=1):
-            self._label(table, r["name"], size=9, anchor="w").grid(row=i, column=0, sticky="ew", padx=3, pady=3)
+            self._label(
+                table, r["name"], size=9, anchor="w"
+            ).grid(row=i, column=0, sticky="ew", padx=3, pady=3)
+
             cnt = self._label(table, "", size=9, anchor="e")
             cnt.grid(row=i, column=1, sticky="ew", padx=3)
-            self._label(table, "60 s", size=9, anchor="e").grid(row=i, column=2, sticky="ew", padx=3)
-            sg = self._label(table, "0", size=9, anchor="e")
+
+            fg = self._label(table, "0.0 s", size=9, anchor="e")
+            fg.grid(row=i, column=2, sticky="ew", padx=3)
+
+            sg = self._label(table, "0.0 s", size=9, anchor="e")
             sg.grid(row=i, column=3, sticky="ew", padx=3)
+
+            score = self._label(table, "0", size=9, anchor="e")
+            score.grid(row=i, column=4, sticky="ew", padx=3)
+
             self.road_counts.append(cnt)
-            self.smart_scores.append(sg)
+            self.fixed_green_labels.append(fg)
+            self.smart_green_labels.append(sg)
+            self.smart_scores.append(score)
         self._label(p2, "*Synthetic example counts, not real observations. Smart score = vehicles \u00d7 2 + average wait (s), live.",
                     fg=MUTED, size=8, justify="left", wraplength=340).pack(anchor="w", padx=12, pady=(8, 10))
 
@@ -825,6 +844,16 @@ class App:
         self._set(self.summary, sim.summary_text())
         for i, sc in enumerate(sim.lane_scores("smart")):
             self._set(self.smart_scores[i], f"{sc:.0f}")
+
+            self._set(
+                self.fixed_green_labels[i],
+                f"{sim.green_secs['fixed'][i]:.1f} s"
+            )
+
+            self._set(
+                self.smart_green_labels[i],
+                f"{sim.green_secs['smart'][i]:.1f} s"
+            )
 
 
 
